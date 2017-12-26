@@ -1,4 +1,4 @@
-#!/bin/sh -xvf
+#!/bin/sh -xv
 
 #------------------------------------------------------------------------------
 #
@@ -58,10 +58,14 @@
 
 rsynchostpath=anoncvs.fr.openbsd.org/openbsd-cvs/
 
-upsync=1		 $ rsync with upstream mirror 
-memcache=1	 # use a memory filesystem to host a copy of staging repo
-						 # no speedup observed, we are cpubound with cvs2gitdump
-device=/dev/sd0b # block device to mount mfs /m, typically your swap device
+upsync=1 # rsync with upstream mirror 
+
+# use a memory filesystem to host a copy of staging repo
+# no speedup observed, we are cpubound with cvs2gitdump
+memcache=1
+
+# block device to mount mfs /m, typically your swap device
+device=/dev/sd0b 
 
 # unset memcache if !openbsd
 os=`uname -s`
@@ -107,11 +111,12 @@ if [ $memcache -eq 1 ]; then
 	# use memory files if we have more than 10GB RAM because cvsrepo0 is about 6.3GB
 	if [ $physmem -gt $memlim ]; then
 		if [ -d /m ]; then
-			doas umount /m; sleep 1
+			doas umount -f /m
+			sleep 10
 			doas rmdir /m
 		fi
-		doas mkdir -p /m
-		doas mount -t mfs -o rw,nodev,nosuid,-s=9g $device /m
+		doas mkdir /m
+		doas mount -t mfs -o rw,noatime,noexec,nodev,nosuid,-s=9g $device /m
 		doas chown $USER /m
 		mount
 		ls -ld /m
@@ -215,7 +220,8 @@ done
 # remove memcache
 if [ $memcache -eq 1 ]; then
 	if [ -d /m ]; then
-		doas umount /m
+		doas umount -f /m
+		sleep 10
 		doas rmdir /m
 	fi
 fi

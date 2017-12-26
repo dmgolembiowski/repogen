@@ -21,8 +21,9 @@
 # Usage:
 # do.sh -	will mirror an OpenBSD CVS mirror, make a copy of that mirror, 
 #		and convert the copy to bare git mirrors and make clones of those
-#		and when called will do the same and update relevant mirrors
-#		user should aim it a particular openbsd rsync mirror and run it daily
+#		and when called will do the same and update relevant git mirrors
+#		user should aim it a particular openbsd rsync mirror 
+#		and run it regularly to maintain updated git mirrors
 #
 # $ doas pkg_add cvs2gitdump
 # $ mkdir repo

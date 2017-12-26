@@ -43,14 +43,14 @@ stagesync=1
 if [ $upsync -eq 1 ]; then
   echo MARK
   date
-  rsync -avz rsync://$rsynchostpath cvsrepo0
+  rsync -avz --delete rsync://$rsynchostpath cvsrepo0
   date
 fi
 
 # sync incoming with staging on disk
 if [ $stagesync -eq 1 ]; then
   echo MARK
-  rsync -a cvsrepo0/ cvsrepo1
+  rsync -a --delete cvsrepo0/ cvsrepo1
   date
   echo MARK
 fi
@@ -82,7 +82,7 @@ if [ $memsync -eq 1 ]; then
       date
       echo MARK
     fi
-    rsync -a cvsrepo1/ /m/cvsrepo1
+    rsync -a --delete cvsrepo1/ /m/cvsrepo1
     date
     echo MARK
     cvsrepo=/m/cvsrepo1
@@ -119,7 +119,7 @@ do
     echo MARK
     date
     if [ $pipeonly -eq 1 ]; then
-      cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo | \
+      cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo $gitrepo | \
           git --git-dir $gitrepo fast-import
     else
       ts=`date +%Y%m%d:%H%M%S%z` 

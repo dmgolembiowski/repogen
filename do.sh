@@ -19,27 +19,28 @@
 #------------------------------------------------------------------------------
 
 # Usage:
-# do.sh - will mirror an OpenBSD CVS mirror, make a copy of that mirror, 
-#				 and convert the copy to bare git mirrors and make clones of those
-#				 and when called will do the same and update relevant mirrors
+# do.sh -	will mirror an OpenBSD CVS mirror, make a copy of that mirror, 
+#		and convert the copy to bare git mirrors and make clones of those
+#		and when called will do the same and update relevant mirrors
 #		user should aim it a particular openbsd rsync mirror and run it daily
 #
+# $ doas pkg_add cvs2gitdump
 # $ mkdir repo
 # $ cd repo
 # $ git clone https://github.com/hakrtech/repogen.git
 # $ chmod +x repogen/do.sh 
 # $ ./repogen/do.sh
 # will generate 
-# 1.	cvsrepo0/		- cvs repository mirrored from france
-# 2.	cvsrepo1/		- staging version of above repository
+# 1.	cvsrepo0/	- cvs repository mirrored from france
+# 2.	cvsrepo1/	- staging version of above repository
 # 3.	bare.src.git/	- bare git repository of src module of cvs repo
-# 4.	bare.xenocara.git/- same for xenocara
-# 5.	bare.ports.git/	 - same for ports
+# 4.	bare.xenocara.git/	- same for xenocara
+# 5.	bare.ports.git/	- same for ports
 # 6.	bare.www.git/	- same for www
 # 7.	src0/		- checkout of master from bare repository for src
 # 8.	xenocara0/	- same for xenocara
 # 9.	ports0/		- same for ports
-# 10. www0/		- same for www
+# 10.	www0/		- same for www
 
 rsynchostpath=anoncvs.fr.openbsd.org/openbsd-cvs/
 
@@ -47,6 +48,22 @@ upsync=1		 $ rsync with upstream mirror
 memcache=1	 # use a memory filesystem to host a copy of staging repo
 						 # no speedup observed, we are cpubound with cvs2gitdump
 device=/dev/sd0b # block device to mount mfs /m, typically your swap device
+
+# unset memcache if !openbsd
+os=`uname -s`
+if [ $os != "OpenBSD" ]; then
+	# :-( no openbsd mfs, so no memcache
+	memcache=0
+	echo MARK unset memcache as $os is not OpenBSD
+fi
+
+# need blk device for memcache (mfs)
+if [ $memcache -eq 1 ]; then
+	if [ ! -b $device ]; then
+		echo "$0: error no such block device $device"
+		exit 1
+	fi
+fi
 
 # incoming cvs repository - cvsrepo0
 cvsrepo=`pwd`/cvsrepo0
@@ -68,19 +85,6 @@ if [ $stagesync -eq 1 ]; then
 fi
 
 # sync staging on disk with staging in memory
-os=`uname -s`
-if [ $os != "OpenBSD" ]; then
-	# :-( no openbsd mfs, so no memcache
-	memcache=0
-	echo MARK unset memcache as $os is not OpenBSD
-fi
-if [ $memcache -eq 1 ]; then
-	if [ ! -b $device ]; then
-		echo "$0: error no such block device $device"
-		exit 1
-	fi
-fi
-
 if [ $memcache -eq 1 ]; then
 	echo MARK
 	date

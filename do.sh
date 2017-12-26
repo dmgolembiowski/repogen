@@ -1,4 +1,4 @@
-#!/bin/sh -xv
+#!/bin/sh -xvf
 
 #------------------------------------------------------------------------------
 #
@@ -42,6 +42,19 @@
 # 8.	xenocara0/	- same for xenocara
 # 9.	ports0/		- same for ports
 # 10.	www0/		- same for www
+# and you run it again to update the same
+# $ ./repogen/do.sh
+# will update
+# 1.	cvsrepo0/	- update cvs repository mirrored from france
+# 2.	cvsrepo1/	- update staging version of above repository
+# 3.	bare.src.git/	- update bare git repository of src module of cvs repo
+# 4.	bare.xenocara.git/	- update same for xenocara
+# 5.	bare.ports.git/	- update same for ports
+# 6.	bare.www.git/	- update same for www
+# 7.	src0/		- update checkout of master from bare repository for src
+# 8.	xenocara0/	- update same for xenocara
+# 9.	ports0/		- update same for ports
+# 10.	www0/		- update same for www
 
 rsynchostpath=anoncvs.fr.openbsd.org/openbsd-cvs/
 

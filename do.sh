@@ -17,12 +17,18 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 #------------------------------------------------------------------------------
+
+# Usage:
+# do.sh - will mirror an OpenBSD CVS mirror, make a copy of that mirror, 
+#         and convert the copy to bare git mirrors and make clones of those
+#         and when called will do the same and update relevant mirrors
+#	  user should aim it a particular openbsd rsync mirror and run it daily
 #
 # $ mkdir repo
 # $ cd repo
 # $ git clone https://github.com/hakrtech/repogen.git
-# chmod +x repogen/do.sh 
-# ./repogen/do.sh
+# $ chmod +x repogen/do.sh 
+# $ ./repogen/do.sh
 # will generate 
 # 1.  cvsrepo0/		- cvs repository mirrored from france
 # 2.  cvsrepo1/		- staging version of above repository

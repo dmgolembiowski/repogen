@@ -88,7 +88,7 @@ mark
 cvsrepo=`pwd`/cvsrepo0
 if [ $upsync -eq 1 ]; then
 	mark
-	/usr/local/bin/rsync -az --delete rsync://$rsynchostpath cvsrepo0
+	rsync -az --delete rsync://$rsynchostpath cvsrepo0
 	mark
 fi
 
@@ -103,22 +103,22 @@ do
 	workgitrepo="${module}0"
 	mark
 	if [ ! -d $baregitrepo ]; then
-		/usr/local/bin/git init --bare $baregitrepo
+		git init --bare $baregitrepo
 		$cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo | \
-			/usr/local/bin/git --git-dir $baregitrepo fast-import
+			git --git-dir $baregitrepo fast-import
 		# create non bare git (typical) git repo from bare repo
 		/bin/rm -f ${module}0
 	else
 		$cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo $baregitrepo | \
-			/usr/local/bin/git --git-dir $baregitrepo fast-import
+			git --git-dir $baregitrepo fast-import
 		# update non bare git repo (typical) from bare repo
 	fi
 	mark
 	if [ ! -d ${module}0 ]; then
-		/usr/local/bin/git clone $baregitrepo $workgitrepo
+		git clone $baregitrepo $workgitrepo
 	fi
 	mark
-	cd $workgitrepo && /usr/local/bin/git pull && cd ..
+	cd $workgitrepo && git pull && cd ..
 	mark
 
 done

@@ -86,13 +86,13 @@ mark
 
 # incoming cvs repository - cvsrepo0
 cvsrepo=`pwd`/cvsrepo0
+echo "MARK cvsrepo is $cvsrepo"
 if [ $upsync -eq 1 ]; then
 	mark
-	rsync -az --delete rsync://$rsynchostpath cvsrepo0
+	rsync -az --delete rsync://$rsynchostpath $cvsrepo
 	mark
 fi
 
-echo MARK cvsrepo is $cvsrepo
 
 savedir=`pwd`
 for module in src xenocara ports www
@@ -107,7 +107,7 @@ do
 		$cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo | \
 			git --git-dir $baregitrepo fast-import
 		# create non bare git (typical) git repo from bare repo
-		/bin/rm -f ${module}0
+		/bin/rm -f $workgitrepo
 	else
 		$cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo $baregitrepo | \
 			git --git-dir $baregitrepo fast-import

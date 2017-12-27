@@ -1,4 +1,4 @@
-#!/bin/sh -xv
+#!/bin/sh -x
 
 #------------------------------------------------------------------------------
 #
@@ -83,6 +83,13 @@ if [ $memcache -eq 1 ]; then
 	fi
 fi
 
+physmem=`sysctl -n hw.physmem`
+memlim=10737418240 # 10GB
+# use memory files if we have more than 10GB RAM because cvsrepo0 is about 6.3GB
+if [ $physmem -lt $memlim ]; then
+	memcache=0
+fi
+
 # incoming cvs repository - cvsrepo0
 cvsrepo=`pwd`/cvsrepo0
 if [ $upsync -eq 1 ]; then
@@ -106,37 +113,32 @@ fi
 if [ $memcache -eq 1 ]; then
 	echo MARK
 	date
-	physmem=`sysctl -n hw.physmem`
-	memlim=10737418240 # 10GB
-	# use memory files if we have more than 10GB RAM because cvsrepo0 is about 6.3GB
-	if [ $physmem -gt $memlim ]; then
-		if [ -d /m ]; then
-			doas umount -f /m
-			sleep 10
-			doas rmdir /m
-		fi
-		doas mkdir /m
-		doas mount -t mfs -o rw,noatime,noexec,nodev,nosuid,-s=9g $device /m
-		doas chown $USER /m
-		mount
-		ls -ld /m
-		df -h
-		sleep 5
+	if [ -d /m ]; then
+		doas umount -f /m
+		sleep 10
+		doas rmdir /m
+	fi
+	doas mkdir /m
+	doas mount -t mfs -o rw,noatime,noexec,nodev,nosuid,-s=9g $device /m
+	doas chown $USER /m
+	mount
+	ls -ld /m
+	df -h
+	sleep 10
 
-		if [ ! -d /m/cvsrepo1 ]; then
-			doas chown -R $USER /m
-			mkdir -p /m/cvsrepo1
-			cp -r cvsrepo1/ /m
-			date
-			echo MARK
-		fi
-
-		rsync -a --delete cvsrepo1/ /m/cvsrepo1
+	if [ ! -d /m/cvsrepo1 ]; then
+		doas chown -R $USER /m
+		mkdir -p /m/cvsrepo1
+		cp -r cvsrepo1/ /m
 		date
 		echo MARK
-
-		cvsrepo=/m/cvsrepo1
 	fi
+
+	rsync -a --delete cvsrepo1/ /m/cvsrepo1
+	date
+	echo MARK
+
+	cvsrepo=/m/cvsrepo1
 fi
 echo MARK cvsrepo is $cvsrepo
 

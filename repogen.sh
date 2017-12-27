@@ -19,7 +19,7 @@
 #------------------------------------------------------------------------------
 
 # Usage:
-# do.sh -	will mirror an OpenBSD CVS mirror
+# repogen.sh -	will mirror an OpenBSD CVS mirror
 #		convert the cvs repo to bare git repos of src,xenocara,ports and www
 #		create typical git repos of the bare git repos
 #
@@ -35,8 +35,8 @@
 # $ mkdir repo
 # $ cd repo
 # $ git clone https://github.com/hakrtech/repogen.git
-# $ chmod +x repogen/do.sh 
-# $ ./repogen/do.sh
+# $ chmod +x repogen/repogen.sh 
+# $ ./repogen/repogen.sh
 # will generate 
 # 1.	cvsrepo0/	- cvs repository mirrored from france
 # 2.	bare.src.git/	- bare git repository of src module of cvs repo
@@ -50,7 +50,7 @@
 # 10.   push.src0	- clone of src0, used to push to github
 #
 # and you run it again to update all of above i.e. 
-# $ ./repogen/do.sh
+# $ ./repogen/repogen.sh
 # will update
 # 1.	cvsrepo0/	- update cvs repository mirrored from france
 # 2.	bare.src.git/	- update bare git repository of src module of cvs repo

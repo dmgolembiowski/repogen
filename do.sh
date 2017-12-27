@@ -157,29 +157,28 @@ if [ $stagesync -eq 1 ]; then
 fi
 
 # sync staging on disk with staging in memory
+reuse=1 # reuse memcache across runs
 if [ $memcache -eq 1 ]; then
 	mark
 	if [ -d /m ]; then
-		/usr/bin/doas /sbin/umount -f /m
-		/bin/sleep 10
-		/usr/bin/doas /bin/rmdir /m
+		if [ $reuse -eq 0 ]; then
+			/usr/bin/doas /sbin/umount -f /m
+			/bin/sleep 10
+			/usr/bin/doas /bin/rmdir /m
+		fi
 	fi
-	/usr/bin/doas /bin/mkdir /m
-	/usr/bin/doas /sbin/mount -t mfs -o rw,noatime,noexec,nodev,nosuid,-s=9g $device /m
-	/usr/bin/doas /sbin/chown $USER /m
-	/sbin/mount
-	ls -ld /m
-	df -h
-	/bin/sleep 10
-
 	if [ ! -d /m/cvsrepo1 ]; then
+		/usr/bin/doas /bin/mkdir /m
+		/usr/bin/doas /sbin/mount -t mfs -o rw,noatime,noexec,nodev,nosuid,-s=9g $device /m
 		/usr/bin/doas /sbin/chown $USER /m
-		/bin/cp -r cvsrepo1/ /m
-		mark
+		/sbin/mount
+		/bin/ls -ld /m
+		/bin/df -h
+		/bin/sleep 10
 	fi
 
 	mark
-	/usr/local/bin/rsync -av --delete cvsrepo1/ /m/cvsrepo1
+	/usr/local/bin/rsync -a --delete cvsrepo1/ /m/cvsrepo1
 	mark
 
 	cvsrepo=/m/cvsrepo1
@@ -259,10 +258,12 @@ done
 
 # remove memcache
 if [ $memcache -eq 1 ]; then
-	if [ -d /m ]; then
-		/usr/bin/doas /sbin/umount -f /m
-		/bin/sleep 10
-		/usr/bin/doas /bin/rmdir /m
+	if [ $reuse -eq 0 ]; then
+		if [ -d /m ]; then
+			/usr/bin/doas /sbin/umount -f /m
+			/bin/sleep 10
+			/usr/bin/doas /bin/rmdir /m
+		fi
 	fi
 fi
 

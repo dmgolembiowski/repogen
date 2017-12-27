@@ -47,8 +47,9 @@
 # 7.	xenocara0/	- same for xenocara
 # 8.	ports0/		- same for ports
 # 9.	www0/		- same for www
+# 10.   push.src0	- clone of src0, used to push to github
 #
-# and you run it again to update the same
+# and you run it again to update all of above i.e. 
 # $ ./repogen/do.sh
 # will update
 # 1.	cvsrepo0/	- update cvs repository mirrored from france
@@ -60,9 +61,17 @@
 # 7.	xenocara0/	- update same for xenocara
 # 8.	ports0/		- update same for ports
 # 9.	www0/		- update same for www
+# 10.   push.src0	- update clone of src0, and then push to github
 
 rsynchostpath=anoncvs.fr.openbsd.org/openbsd-cvs/
 upsync=1 # rsync with upstream mirror 
+githubrepo=""
+
+# if set push to this github repository, you should have set up ssh key based access to 
+# your github account and you should be assigned write permissions to this repository
+# of course, this repository should exist in the first place
+# uncomment if needed and change to your repository
+# githubrepo="git@github.com:hakrdinesh/src.git"
 
 mark() { 
 	echo -n "MARK "; date
@@ -95,6 +104,7 @@ fi
 
 
 savedir=`pwd`
+run=""
 for module in src xenocara ports www
 do
 	cd $savedir
@@ -103,23 +113,48 @@ do
 	workgitrepo="${module}0"
 	mark
 	if [ ! -d $baregitrepo ]; then
-		git init --bare $baregitrepo
-		$cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo | \
-			git --git-dir $baregitrepo fast-import
+		$run git init --bare $baregitrepo
+		$run $cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo | \
+			$run git --git-dir $baregitrepo fast-import
 		# create non bare git (typical) git repo from bare repo
-		/bin/rm -f $workgitrepo
+		$run /bin/rm -f $workgitrepo
 	else
-		$cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo $baregitrepo | \
-			git --git-dir $baregitrepo fast-import
+		$run $cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo $baregitrepo | \
+			$run git --git-dir $baregitrepo fast-import
 		# update non bare git repo (typical) from bare repo
 	fi
 	mark
-	if [ ! -d ${module}0 ]; then
-		git clone $baregitrepo $workgitrepo
+	if [ ! -d $workgitrepo ]; then
+		$run git clone $baregitrepo $workgitrepo
 	fi
 	mark
-	cd $workgitrepo && git pull && cd ..
+	cd $workgitrepo && $run git pull && cd ..
 	mark
+
+	if [ $githubrepo != "" ]; then
+		if [ $module = "src" ]; then
+			cwd=`pwd`
+			pushrepo="$cwd/push.${module}0"
+			echo $pushrepo
+			if [ ! -d $pushrepo ]; then
+				git clone $workgitrepo $pushrepo
+			fi
+			if [ -d $pushrepo ]; then
+				cd $pushrepo && git pull
+				present=`cd $pushrepo && git remote -v | awk '{ if ($1 == "github") print $2; }' | wc -l`
+				if [ $present -eq 0 ]; then
+					cd $pushrepo && git remote add github $githubrepo
+				fi
+				present=`cd $pushrepo && git remote -v | awk '{ if ($1 == "github") print $2; }' | wc -l`
+				if [ $present -ne 2 ]; then
+					echo $0: unable to set git remote add $githubrepo
+					exit 1
+				fi
+				git push --mirror --repo=$pushrepo github
+				exit 0
+			fi
+		fi
+	fi
 
 done
 

@@ -65,13 +65,13 @@
 
 rsynchostpath=anoncvs.fr.openbsd.org/openbsd-cvs/
 upsync=1 # rsync with upstream mirror 
-githubrepo=""
+githubreporoot=""
 
 # if set push to this github repository, you should have set up ssh key based access to 
 # your github account and you should be assigned write permissions to this repository
 # of course, this repository should exist in the first place
 # uncomment if needed and change to your repository
-# githubrepo="git@github.com:hakrdinesh/src.git"
+# githubreporoot="git@github.com:hakrtech"
 
 mark() { 
 	echo -n "MARK "; date
@@ -105,7 +105,8 @@ fi
 
 savedir=`pwd`
 run=""
-for module in src xenocara ports www
+run2=""
+for module in xenocara ports www
 do
 	cd $savedir
 	repodir=bare.${module}.git
@@ -125,37 +126,34 @@ do
 	fi
 	mark
 	if [ ! -d $workgitrepo ]; then
-		$run git clone $baregitrepo $workgitrepo
+		$run2 git clone $baregitrepo $workgitrepo
 	fi
 	mark
-	cd $workgitrepo && $run git pull && cd ..
+	cd $workgitrepo && $run2 git pull && cd ..
 	mark
 
-	if [ $githubrepo != "" ]; then
-		if [ $module = "src" ]; then
-			cwd=`pwd`
-			pushrepo="$cwd/push.${module}0"
-			echo $pushrepo
-			if [ ! -d $pushrepo ]; then
-				git clone $workgitrepo $pushrepo
+	if [ $githubreporoot != "" ]; then
+		githubrepo="$githubreporoot/openbsd-${module}0-test.git"
+		cwd=`pwd`
+		pushrepo="$cwd/push.${module}0"
+		echo $pushrepo
+		if [ ! -d $pushrepo ]; then
+			git clone $workgitrepo $pushrepo
+		fi
+		if [ -d $pushrepo ]; then
+			cd $pushrepo && git pull
+			present=`cd $pushrepo && git remote -v | awk '{ if ($1 == "github") print $2; }' | wc -l`
+			if [ $present -eq 0 ]; then
+				cd $pushrepo && git remote add github $githubrepo
 			fi
-			if [ -d $pushrepo ]; then
-				cd $pushrepo && git pull
-				present=`cd $pushrepo && git remote -v | awk '{ if ($1 == "github") print $2; }' | wc -l`
-				if [ $present -eq 0 ]; then
-					cd $pushrepo && git remote add github $githubrepo
-				fi
-				present=`cd $pushrepo && git remote -v | awk '{ if ($1 == "github") print $2; }' | wc -l`
-				if [ $present -ne 2 ]; then
-					echo $0: unable to set git remote add $githubrepo
-					exit 1
-				fi
-				git push --mirror --repo=$pushrepo github
-				exit 0
+			present=`cd $pushrepo && git remote -v | awk '{ if ($1 == "github") print $2; }' | wc -l`
+			if [ $present -ne 2 ]; then
+				echo $0: unable to set git remote add $githubrepo
+				exit 1
 			fi
+			git push --mirror --repo=$pushrepo github
 		fi
 	fi
-
 done
 
 mark

@@ -39,8 +39,8 @@ fi
 
 run="echo"
 run=""
-git log | grep ^commit | cat -n | awk '{ if ($1 % 1000 == 0) print $0; }' | sort -rn | awk '{ print $3; }' 
-for id in `git log | grep ^commit | cat -n | awk '{ if ($1 % 1000 == 0) print $0; }' | sort -rn | awk '{ print $3; }' `
+git log --reverse | grep ^commit | cat -n | awk '{ if ($1 % 1000 == 1) print $0; }' | awk '{ print $3; }' |  tee COMMITS 
+for id in `cat COMMITS`
 do
 	if [ $firstpush -eq 1 ]; then
 		$run git push github ${id}:refs/heads/master
@@ -52,5 +52,6 @@ do
 		$run markid | $run tee -a DONE
 	fi
 done
+git push --mirror github master
 
 exit 0

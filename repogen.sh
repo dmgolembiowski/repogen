@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 #------------------------------------------------------------------------------
 #
@@ -17,6 +17,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 #------------------------------------------------------------------------------
+
+set -x
 
 # Usage:
 # repogen.sh -	will mirror an OpenBSD CVS mirror
@@ -98,15 +100,19 @@ cvsrepo=`pwd`/cvsrepo0
 echo "MARK cvsrepo is $cvsrepo"
 if [ $upsync -eq 1 ]; then
 	mark
-	rsync -az --delete rsync://$rsynchostpath $cvsrepo
+	/usr/local/bin/rsync -az --delete rsync://$rsynchostpath $cvsrepo
 	mark
 fi
 
+if [ -e /cvs ]; then
+	cvsrepo=/cvs
+fi
 
 savedir=`pwd`
 run=""
 run2=""
-for module in xenocara ports www
+
+for module in xenocara ports www src
 do
 	cd $savedir
 	repodir=bare.${module}.git
@@ -115,12 +121,12 @@ do
 	mark
 	if [ ! -d $baregitrepo ]; then
 		$run git init --bare $baregitrepo
-		$run $cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo | \
+		$run $cvs2gitdump -k OpenBSD -e openbsd.org $cvsrepo/$module | \
 			$run git --git-dir $baregitrepo fast-import
 		# create non bare git (typical) git repo from bare repo
 		$run /bin/rm -f $workgitrepo
 	else
-		$run $cvs2gitdump -k OpenBSD -e openbsd.org -m $module $cvsrepo $baregitrepo | \
+		$run $cvs2gitdump -k OpenBSD -e openbsd.org $cvsrepo/$module $baregitrepo | \
 			$run git --git-dir $baregitrepo fast-import
 		# update non bare git repo (typical) from bare repo
 	fi
@@ -156,5 +162,3 @@ do
 	fi
 done
 
-mark
-exit 0
